@@ -1,0 +1,311 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model Profile {
+  id             String                   @id @db.Uuid
+  username       String                   @unique @db.VarChar(30)
+  bio            String                   @default("") @db.VarChar(500)
+  avatarUrl      String?
+  timeZone       String                   @default("UTC")
+  createdAt      DateTime                 @default(now())
+  accounts       ConnectedAccount[]
+  activities     CodingActivity[]
+  summaries      DailySummary[]
+  streak         Streak?
+  memberships    ClanMembership[]
+  follows        Follow[]                 @relation("follower")
+  followers      Follow[]                 @relation("following")
+  posts          Post[]
+  likes          Like[]
+  comments       Comment[]
+  xpTransactions XpTransaction[]
+  achievements   UserAchievement[]
+  notifications  Notification[]
+  messages       ChatMessage[]
+  participations ChallengeParticipation[]
+  joinRequests   JoinRequest[]
+  imports        ImportedSubmission[]
+  claims         ActivityClaim[]
+
+  @@map("profiles")
+}
+
+model ConnectedAccount {
+  id         String    @id @default(uuid()) @db.Uuid
+  userId     String    @db.Uuid
+  provider   String
+  username   String
+  status String @default("SELF_REPORTED")
+  lastImportedAt DateTime?
+  lastSyncAt DateTime?
+  syncStatus String @default("UNAVAILABLE")
+  verifiedAt DateTime?
+  createdAt  DateTime  @default(now())
+  user       Profile   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, provider])
+  @@map("connected_accounts")
+}
+
+model CodingActivity {
+  id         String         @id @default(uuid()) @db.Uuid
+  userId     String         @db.Uuid
+  provider   String
+  externalId String
+  problemId  String
+  title      String
+  difficulty String
+  occurredAt DateTime
+  verifiedAt DateTime       @default(now())
+  user       Profile        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  xp         XpTransaction?
+  posts      Post[]
+
+  @@unique([userId, provider, externalId])
+  @@unique([userId, provider, problemId])
+  @@index([userId, occurredAt])
+  @@map("coding_activities")
+}
+
+model DailySummary {
+  id     String  @id @default(uuid()) @db.Uuid
+  userId String  @db.Uuid
+  day    String  @db.VarChar(10)
+  solved Int     @default(0)
+  xp     Int     @default(0)
+  user   Profile @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, day])
+  @@map("daily_summaries")
+}
+
+model Streak {
+  userId    String   @id @db.Uuid
+  current   Int      @default(0)
+  longest   Int      @default(0)
+  lastDay   String?
+  updatedAt DateTime @updatedAt
+  user      Profile  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("streaks")
+}
+
+model Clan {
+  id          String           @id @default(uuid()) @db.Uuid
+  name        String           @unique @db.VarChar(60)
+  description String           @default("") @db.VarChar(500)
+  private     Boolean          @default(false)
+  createdAt   DateTime         @default(now())
+  memberships ClanMembership[]
+  requests    JoinRequest[]
+  posts       Post[]
+  messages    ChatMessage[]
+  challenges  Challenge[]
+
+  @@map("clans")
+}
+
+model ClanMembership {
+  clanId   String   @db.Uuid
+  userId   String   @db.Uuid
+  role     String   @default("MEMBER")
+  joinedAt DateTime @default(now())
+  clan     Clan     @relation(fields: [clanId], references: [id], onDelete: Cascade)
+  user     Profile  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([clanId, userId])
+  @@index([userId])
+  @@map("clan_memberships")
+}
+
+model JoinRequest {
+  clanId    String   @db.Uuid
+  userId    String   @db.Uuid
+  createdAt DateTime @default(now())
+  clan      Clan     @relation(fields: [clanId], references: [id], onDelete: Cascade)
+  user      Profile  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([clanId, userId])
+  @@map("join_requests")
+}
+
+model Follow {
+  followerId  String   @db.Uuid
+  followingId String   @db.Uuid
+  createdAt   DateTime @default(now())
+  follower    Profile  @relation("follower", fields: [followerId], references: [id], onDelete: Cascade)
+  following   Profile  @relation("following", fields: [followingId], references: [id], onDelete: Cascade)
+
+  @@id([followerId, followingId])
+  @@index([followingId])
+  @@map("follows")
+}
+
+model Post {
+  id         String          @id @default(uuid()) @db.Uuid
+  authorId   String          @db.Uuid
+  body       String          @db.VarChar(2000)
+  kind       String          @default("MANUAL")
+  activityId String?         @db.Uuid
+  clanId     String?         @db.Uuid
+  createdAt  DateTime        @default(now())
+  author     Profile         @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  activity   CodingActivity? @relation(fields: [activityId], references: [id], onDelete: Cascade)
+  clan       Clan?           @relation(fields: [clanId], references: [id], onDelete: Cascade)
+  likes      Like[]
+  comments   Comment[]
+
+  @@index([clanId, createdAt, id])
+  @@index([authorId, createdAt])
+  @@map("posts")
+}
+
+model Like {
+  postId String  @db.Uuid
+  userId String  @db.Uuid
+  post   Post    @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user   Profile @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([postId, userId])
+  @@map("likes")
+}
+
+model Comment {
+  id        String   @id @default(uuid()) @db.Uuid
+  postId    String   @db.Uuid
+  authorId  String   @db.Uuid
+  body      String   @db.VarChar(1000)
+  createdAt DateTime @default(now())
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  author    Profile  @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@index([postId, createdAt])
+  @@map("comments")
+}
+
+model Challenge {
+  id           String                   @id @default(uuid()) @db.Uuid
+  clanId       String                   @db.Uuid
+  title        String                   @db.VarChar(100)
+  target       Int
+  startsAt     DateTime
+  endsAt       DateTime
+  clan         Clan                     @relation(fields: [clanId], references: [id], onDelete: Cascade)
+  participants ChallengeParticipation[]
+
+  @@index([clanId, startsAt])
+  @@map("challenges")
+}
+
+model ChallengeParticipation {
+  challengeId String    @db.Uuid
+  userId      String    @db.Uuid
+  joinedAt    DateTime  @default(now())
+  challenge   Challenge @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+  user        Profile   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([challengeId, userId])
+  @@map("challenge_participations")
+}
+
+model XpTransaction {
+  id         String         @id @default(uuid()) @db.Uuid
+  userId     String         @db.Uuid
+  activityId String         @unique @db.Uuid
+  amount     Int
+  occurredAt DateTime
+  user       Profile        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  activity   CodingActivity @relation(fields: [activityId], references: [id], onDelete: Cascade)
+
+  @@index([userId, occurredAt])
+  @@map("xp_transactions")
+}
+
+model Achievement {
+  id    String            @id @default(uuid()) @db.Uuid
+  code  String            @unique
+  title String
+  users UserAchievement[]
+
+  @@map("achievements")
+}
+
+model UserAchievement {
+  userId        String      @db.Uuid
+  achievementId String      @db.Uuid
+  earnedAt      DateTime    @default(now())
+  user          Profile     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  achievement   Achievement @relation(fields: [achievementId], references: [id], onDelete: Cascade)
+
+  @@id([userId, achievementId])
+  @@map("user_achievements")
+}
+
+model Notification {
+  id        String    @id @default(uuid()) @db.Uuid
+  userId    String    @db.Uuid
+  body      String
+  readAt    DateTime?
+  createdAt DateTime  @default(now())
+  user      Profile   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@map("notifications")
+}
+
+model ChatMessage {
+  id        String   @id @default(uuid()) @db.Uuid
+  clanId    String   @db.Uuid
+  authorId  String   @db.Uuid
+  body      String   @db.VarChar(2000)
+  createdAt DateTime @default(now())
+  clan      Clan     @relation(fields: [clanId], references: [id], onDelete: Cascade)
+  author    Profile  @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@index([clanId, createdAt])
+  @@map("chat_messages")
+}
+
+model ActivityClaim {
+  id          String    @id @default(uuid()) @db.Uuid
+  userId      String    @db.Uuid
+  provider    String
+  problemId   String
+  title       String
+  difficulty  String
+  occurredAt  DateTime
+  evidenceUrl String
+  status      String    @default("PENDING")
+  reviewerId  String?   @db.Uuid
+  reviewedAt  DateTime?
+  createdAt   DateTime  @default(now())
+  user        Profile   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@map("activity_claims")
+}
+
+model ImportedSubmission {
+ id String @id @default(uuid()) @db.Uuid
+ userId String @db.Uuid
+ provider String @default("leetcode")
+ username String
+ externalId String
+ problemId String
+ title String
+ difficulty String
+ occurredAt DateTime
+ verificationSource String @default("SELF_REPORTED_IMPORT")
+ importedAt DateTime @default(now())
+ user Profile @relation(fields: [userId], references: [id], onDelete: Cascade)
+ @@unique([userId, provider, externalId])
+ @@index([userId, occurredAt])
+ @@map("imported_submissions")
+}

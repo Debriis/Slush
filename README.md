@@ -1,56 +1,78 @@
-# Welcome to your Expo app 👋
+# SLUSH — Strava for Coders
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+A JavaScript/JSX Expo SDK 58 mobile app with a separate Express API, Supabase Auth, PostgreSQL/Prisma, and Supabase Realtime. There are no seeded users, sample submissions, fabricated stats, or hardcoded leaderboards.
 
-## Get started
+## What is implemented
 
-1. Install dependencies
+- Register, email confirmation, login, persistent sessions, logout, password reset, protected navigation, profile provisioning and editing.
+- Database-backed dashboard: verified solves, current/longest streaks, heatmap, seven-day chart, XP and levels.
+- Community/following/personal feeds, manual posts (explicitly no XP), verified achievement sharing, likes, comments, pagination and refresh.
+- Public/private clans, owner/admin/member roles, join requests, approval, ownership transfer, removal, leave, member directory, feed, chat, and seven-day challenges.
+- Global/following/clan rankings, UTC week/month/all-time windows, XP/verified-solve metrics and tied ranks.
+- Profile pictures by HTTPS URL, bios, follower/following/mutual-friend lists, first-verified achievement and notifications.
+- Independent activity evidence review, atomic backend XP transactions and duplicate prevention. No automatic LeetCode scraping or undocumented API access.
 
-   ```bash
-   npm install
-   ```
+The configured Supabase database is connected and both migrations are applied. Temporary database reads/writes, anonymous-access protection, and the real sign-in page were checked. Email delivery, authenticated workflows, Realtime behavior, and physical-device operation still need real-account testing.
 
-2. Start the app
+## Project
 
-   ```bash
-   npx expo start
-   ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **src/app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
-
-```bash
-npm run reset-project
+```text
+slush/                         # Git/monorepo root (the inner slush folder)
+  frontend/
+    app/                       # (auth), (tabs), clans/[id], users/[id], notifications
+    src/
+      components/              # reusable dark/purple UI
+      features/                # auth, home, activity, clans, leaderboard, profile, notifications
+      hooks/                   # Query hooks and cleaned-up Realtime subscription
+      services/                # Supabase, secure session storage, HTTP transport
+      store/                   # Zustand UI preferences only
+      config/                  # validated public environment
+      theme/
+    assets/                    # preserved original app assets
+    legacy-src/                # preserved starter source, not routed or bundled
+    __tests__/
+    .env.example
+    package.json
+  backend/
+    src/                       # app/server, routes, controllers, services, middleware, validators, utils
+    prisma/                    # schema and two migrations, including RLS policies
+    tests/                     # unit/API tests, optional live DB definition checks
+    .env.example
+    package.json
+  docs/
+  scripts/dev.js
+  package.json
 ```
 
-This command will move the starter code to the **example** directory and create a blank **src/app** directory where you can start developing.
+## Windows PowerShell quick start
 
-### Other setup steps
+```powershell
+cd C:\Users\Ayush\OneDrive\Documents\testing\slush\slush
+npm install
+npm run setup:env
+# Preserves existing local files. For a new installation, fill backend/.env locally.
+npm run config:sync
+npm run config:check
+npm run db:generate
+npm run db:validate
+npm run db:migrate
+# Two terminals:
+npm run backend
+npm run frontend -- --go
+# Or start both:
+npm run dev
+```
 
-- To set up ESLint for linting, run `npx expo lint`, or follow our guide on ["Using ESLint and Prettier"](https://docs.expo.dev/guides/using-eslint/)
-- If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
-- Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
+For Expo Go, forward arguments with `npm run start --workspace frontend -- --go` (the explicit direct workspace command). For web: `npm run web`. On a phone the API URL must use your computer's LAN IP, not localhost.
 
-## Learn more
+```powershell
+npm test
+npm run lint
+npm run typecheck --workspace frontend
+npm run check:dependencies
+npm run doctor --workspace frontend
+```
 
-To learn more about developing your project with Expo, look at the following resources:
+See [setup](docs/setup.md) for exact Supabase/redirect/LAN configuration, [database](docs/database.md), [API](docs/api.md), [architecture](docs/architecture.md), and [verification](docs/verification.md).
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+Automatic LeetCode sync is unavailable. An account username is self-reported, not proof of ownership. Manual posts never earn competitive points. Evidence review stays disabled unless trusted reviewer UUIDs are configured; independent reviewers must verify genuine ownership/acceptance and may not approve themselves. Only approved unique problems earn the initial SLUSH product XP rules (10/25/50), which are not LeetCode scores.

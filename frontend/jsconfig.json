@@ -1,0 +1,16 @@
+{
+  "compilerOptions": {
+    "allowJs": true,
+    "checkJs": false,
+    "noEmit": true,
+    "jsx": "react-jsx",
+    "module": "preserve",
+    "moduleResolution": "bundler",
+    "skipLibCheck": true,
+    "paths": {
+      "@/*": ["./src/*"],
+      "@/assets/*": ["./assets/*"]
+    }
+  },
+  "include": ["app/**/*.js", "app/**/*.jsx", "src/**/*.js", "src/**/*.jsx"]
+}

@@ -10,6 +10,8 @@ Expo ships breaking changes every SDK release. APIs you remember are likely rena
 
 ## Commands
 
+This is now an npm workspace monorepo. Run Expo commands from `frontend/`, or use root workspace scripts. Run `npm run lint` and `npm run typecheck --workspace frontend` from the root; no TypeScript source is maintained. Database generation/migration commands run through the backend workspace.
+
 Use `bunx` instead of `npx` if the project uses bun (`bun.lock` present).
 
 ```bash
@@ -25,7 +27,7 @@ Run lint and typecheck before declaring any task done.
 
 ## Navigation & Routing
 
-- Use **Expo Router** for all navigation. Routes live in `src/app/` — every file there is a screen, `_layout.tsx` files define navigators. Keep non-route code (components, hooks, utils) outside `src/app/`.
+- Use **Expo Router** for all navigation. Routes now live in `frontend/app/`; `_layout.jsx` files define navigators. Use JavaScript/JSX only. Keep non-route code in `frontend/src/`. The previous starter source is archived in `frontend/legacy-src/`.
 - Import `Link`, `router`, and `useLocalSearchParams` from `expo-router`.
 - Docs: https://docs.expo.dev/router/introduction.md
 

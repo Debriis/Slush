@@ -1,0 +1,30 @@
+{
+  "name": "@slush/backend",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node src/start.js",
+    "dev": "node ../scripts/dev.js --backend-only",
+    "test": "node --test tests/*.test.js",
+    "lint": "eslint src tests",
+    "db:generate": "node scripts/prisma.js generate",
+    "db:validate": "node scripts/prisma.js validate",
+    "db:migrate": "node scripts/prisma.js migrate deploy",
+    "db:status": "node scripts/prisma.js migrate status",
+    "services:check": "node src/checkServices.js"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.19.0",
+    "@supabase/supabase-js": "^2.57.0",
+    "express": "^5.1.0",
+    "cors": "^2.8.5",
+    "helmet": "^8.1.0",
+    "express-rate-limit": "^8.1.0",
+    "zod": "^4.1.0"
+  },
+  "devDependencies": {
+    "prisma": "^6.19.0",
+    "supertest": "^7.1.0",
+    "eslint": "^9.39.5"
+  }
+}

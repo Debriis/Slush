@@ -1,0 +1,8 @@
+node_modules/
+frontend/legacy-src/
+frontend/assets/
+frontend/.expo/
+frontend/dist/
+dist/
+package-lock.json
+backend/prisma/
